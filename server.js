@@ -6,11 +6,13 @@ const { createServer } = require("http");
 const { Server } = require("socket.io");
 
 const OBS = require("./libs/OBS");
+const VMIX = require("./libs/vMix");
 
 const system = new EventEmitter();
 
 const useOBS2 = false;
 const useOBS3 = false;
+const useVmix = true;
 
 let state = {
   OBS1: {
@@ -186,6 +188,11 @@ const init = async () => {
 
   await setInitialSceneItemValues(obs1, obs2, obs3);
 
+  let vmix = new VMIX(system, io, {
+    address: process.env.VMIXADDRESS,
+    active: useVmix,
+  });
+
   console.log(
     colors.green.bold(`Websocket available on port: ${process.env.PORT}`)
   );
@@ -217,6 +224,8 @@ const init = async () => {
 
       handleChange(scene, position, input, type, obs1, obs2, obs3);
 
+      handleVmixChange(scene, position, input, vmix);
+
       io.emit("sceneInfo", scenes);
     });
 
@@ -224,6 +233,8 @@ const init = async () => {
       obs1.setCurrentScene(scene);
       if (useOBS2) obs2.setCurrentScene(scene);
       if (useOBS3) obs3.setCurrentScene(scene);
+
+      vmix.transition(scene);
 
       currentScene = scene;
       io.emit("currentScene", currentScene);
@@ -311,6 +322,25 @@ const getPositionLabel = (xposition, yposition, scale, type) => {
   }
 };
 
+const getVmixLayer = (position) => {
+  switch (position) {
+    case "Top Left":
+    case "Left":
+      return 1;
+    case "Top Right":
+    case "Right":
+      return 2;
+    case "Bottom Left":
+    case "Left Cam":
+      return 3;
+    case "Bottom Right":
+    case "Right Cam":
+      return 4;
+    default:
+      return;
+  }
+};
+
 const deleteAllItemsInScene = async (obs, scene) => {
   const sceneItems = await obs.getSceneItemList(scene);
   for (const { itemId } of sceneItems) {
@@ -345,10 +375,10 @@ const selectOBSAndAddItem = (
       addItemToScene(obs1, scene, type, input, positionValues);
       break;
     case "OBS2":
-      addItemToScene(obs2, scene, type, input, positionValues);
+      if (useOBS2) addItemToScene(obs2, scene, type, input, positionValues);
       break;
     case "OBS3":
-      addItemToScene(obs3, scene, type, input, positionValues);
+      if (useOBS3) addItemToScene(obs3, scene, type, input, positionValues);
       break;
     default:
       return;
@@ -415,4 +445,12 @@ const handleChange = async (scene, position, input, type, obs1, obs2, obs3) => {
   if (useOBS3) deleteItemInPosition(scene, position, type, obs3);
 
   selectOBSAndAddItem(obs1, obs2, obs3, input, position, scene, type);
+};
+
+const handleVmixChange = async (scene, position, input, vmix) => {
+  const layer = getVmixLayer(position);
+
+  const obs = findOBS(input);
+
+  vmix.setLayer(scene, layer, obs);
 };

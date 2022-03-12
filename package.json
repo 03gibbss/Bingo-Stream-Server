@@ -15,6 +15,7 @@
     "dotenv": "^16.0.0",
     "express": "^4.17.3",
     "fs-extra": "^10.0.1",
+    "node-vmix": "^1.6.0",
     "nodemon": "^2.0.15",
     "obs-websocket-js": "^4.0.3",
     "socket.io": "^4.4.1"

@@ -6,7 +6,6 @@ module.exports = class OBS {
     this.io = io;
     this.config = config;
     this.obs = new OBSWebSocket();
-    this.currentScene = null;
     this.events();
   }
 
