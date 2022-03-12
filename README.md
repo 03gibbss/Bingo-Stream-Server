@@ -1,0 +1,1 @@
+Node server for 'Elden Ring Bingo' app - allows control of multiple OBS and vMix instances via websockets with a react front end (see other repo).

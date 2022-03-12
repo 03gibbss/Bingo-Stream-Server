@@ -1,0 +1,45 @@
+// OBS Settings
+
+Gameplay Scenes:
+Team 1 A
+Team 1 B 
+Team 2 A 
+Team 2 B 
+
+Scene: Quad A
+
+Sources:
+Top Left
+Top Right
+Bottom Left
+Bottom Right
+
+
+
+--------
+
+Timeline of actions
+
+1. User selects Team 1 B input for Quad A Top Left
+?? should this set the input to loading? 1/?
+2. Websocket sends data to back end
+?? update the input to loading? 2/?
+3. Backend websocket receives data
+4. Send back ping to confirm
+5. update the input to loading 3/?
+6. Backend sends data to OBS 1, 2, 3 and vMix
+7. Await responses from all 4
+8. Get confirmation that Quad A has been set to Team 1 B
+?? update scenes object on backend with confirmed data
+9. Send confirmation to front end and update select
+
+
+------
+
+inital boot sequence
+
+1. connect to OBS websockets
+2. connect to vmix websocket
+3. ping for input setting on all sources
+4. update scenes object on backend
+
