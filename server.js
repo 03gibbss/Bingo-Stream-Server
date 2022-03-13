@@ -10,7 +10,7 @@ const VMIX = require("./libs/vMix");
 
 const system = new EventEmitter();
 
-const useOBS2 = false;
+const useOBS2 = true;
 const useOBS3 = false;
 const useVmix = true;
 
@@ -27,6 +27,7 @@ let state = {
   vMix: {
     connected: false,
   },
+  availableInputs: []
 };
 
 let currentScene = "Multiview";
@@ -186,12 +187,26 @@ const init = async () => {
     }
   }
 
-  await setInitialSceneItemValues(obs1, obs2, obs3);
-
   let vmix = new VMIX(system, io, {
     address: process.env.VMIXADDRESS,
     active: useVmix,
   });
+
+  if (useVmix) state['vMix'].connected = true; // vMix doesn't confirm if it connects or not, but if it fails to connect, the app will crash and never reach this line anyway...
+
+  if (state['OBS1'].connected) {
+    state.availableInputs = [...state.availableInputs, 'Team 1 A', 'Team 1 B', 'Team 2 A', 'Team 2 B'];
+  }
+
+  if (state['OBS2'].connected) {
+    state.availableInputs = [...state.availableInputs, 'Team 3 A', 'Team 3 B', 'Team 4 A', 'Team 4 B'];
+  }
+
+  if (state['OBS3'].connected) {
+    state.availableInputs = [...state.availableInputs, 'Team 5 A', 'Team 5 B', 'Team 6 A', 'Team 6 B'];
+  }
+
+  await setInitialSceneItemValues(obs1, obs2, obs3, vmix);
 
   console.log(
     colors.green.bold(`Websocket available on port: ${process.env.PORT}`)
@@ -348,12 +363,14 @@ const deleteAllItemsInScene = async (obs, scene) => {
   }
 };
 
-const addItemsToScene = async (obs1, obs2, obs3, scene) => {
+const addItemsToScene = async (obs1, obs2, obs3, vmix, scene) => {
   const positions = Object.keys(scenes[scene]);
   for (const position of positions) {
     const { type, input } = scenes[scene][position];
 
     selectOBSAndAddItem(obs1, obs2, obs3, input, position, scene, type);
+
+    handleVmixChange(scene, position, input, vmix)
   }
 };
 
@@ -402,7 +419,7 @@ const addItemToScene = async (obs, sceneName, type, input, position) => {
     });
 };
 
-const setInitialSceneItemValues = async (obs1, obs2, obs3) => {
+const setInitialSceneItemValues = async (obs1, obs2, obs3, vmix) => {
   const sceneNames = Object.keys(scenes);
 
   for (const scene of sceneNames) {
@@ -416,7 +433,7 @@ const setInitialSceneItemValues = async (obs1, obs2, obs3) => {
       await deleteAllItemsInScene(obs3, scene);
     }
 
-    await addItemsToScene(obs1, obs2, obs3, scene);
+    await addItemsToScene(obs1, obs2, obs3, vmix, scene);
   }
 };
 
