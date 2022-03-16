@@ -10,9 +10,9 @@ const VMIX = require("./libs/vMix");
 
 const system = new EventEmitter();
 
-const useOBS2 = true;
+const useOBS2 = false;
 const useOBS3 = false;
-const useVmix = true;
+const useVmix = false;
 
 let state = {
   OBS1: {
@@ -27,10 +27,10 @@ let state = {
   vMix: {
     connected: false,
   },
-  availableInputs: []
+  availableInputs: [],
 };
 
-let currentScene = "Multiview";
+let currentScene = "Multiview A";
 
 let scenes = {
   "Quad A": {
@@ -125,6 +125,90 @@ let scenes = {
       input: "Team 1 A",
     },
   },
+  "All Gameplay A": {
+    "Top Left": {
+      type: "Game",
+      input: "Team 1 A",
+    },
+    "Top Right": {
+      type: "Game",
+      input: "Team 1 A",
+    },
+    3: {
+      type: "Game",
+      input: "Team 1 A",
+    },
+    4: {
+      type: "Game",
+      input: "Team 1 A",
+    },
+    5: {
+      type: "Game",
+      input: "Team 1 A",
+    },
+    6: {
+      type: "Game",
+      input: "Team 1 A",
+    },
+    7: {
+      type: "Game",
+      input: "Team 1 A",
+    },
+    8: {
+      type: "Game",
+      input: "Team 1 A",
+    },
+    9: {
+      type: "Game",
+      input: "Team 1 A",
+    },
+    10: {
+      type: "Game",
+      input: "Team 1 A",
+    },
+  },
+  "All Gameplay B": {
+    "Top Left": {
+      type: "Game",
+      input: "Team 1 A",
+    },
+    "Top Right": {
+      type: "Game",
+      input: "Team 1 A",
+    },
+    3: {
+      type: "Game",
+      input: "Team 1 A",
+    },
+    4: {
+      type: "Game",
+      input: "Team 1 A",
+    },
+    5: {
+      type: "Game",
+      input: "Team 1 A",
+    },
+    6: {
+      type: "Game",
+      input: "Team 1 A",
+    },
+    7: {
+      type: "Game",
+      input: "Team 1 A",
+    },
+    8: {
+      type: "Game",
+      input: "Team 1 A",
+    },
+    9: {
+      type: "Game",
+      input: "Team 1 A",
+    },
+    10: {
+      type: "Game",
+      input: "Team 1 A",
+    },
+  },
 };
 
 const httpServer = createServer();
@@ -192,18 +276,36 @@ const init = async () => {
     active: useVmix,
   });
 
-  if (useVmix) state['vMix'].connected = true; // vMix doesn't confirm if it connects or not, but if it fails to connect, the app will crash and never reach this line anyway...
+  if (useVmix) state["vMix"].connected = true; // vMix doesn't confirm if it connects or not, but if it fails to connect, the app will crash and never reach this line anyway...
 
-  if (state['OBS1'].connected) {
-    state.availableInputs = [...state.availableInputs, 'Team 1 A', 'Team 1 B', 'Team 2 A', 'Team 2 B'];
+  if (state["OBS1"].connected) {
+    state.availableInputs = [
+      ...state.availableInputs,
+      "Team 1 A",
+      "Team 1 B",
+      "Team 2 A",
+      "Team 2 B",
+    ];
   }
 
-  if (state['OBS2'].connected) {
-    state.availableInputs = [...state.availableInputs, 'Team 3 A', 'Team 3 B', 'Team 4 A', 'Team 4 B'];
+  if (state["OBS2"].connected) {
+    state.availableInputs = [
+      ...state.availableInputs,
+      "Team 3 A",
+      "Team 3 B",
+      "Team 4 A",
+      "Team 4 B",
+    ];
   }
 
-  if (state['OBS3'].connected) {
-    state.availableInputs = [...state.availableInputs, 'Team 5 A', 'Team 5 B', 'Team 6 A', 'Team 6 B'];
+  if (state["OBS3"].connected) {
+    state.availableInputs = [
+      ...state.availableInputs,
+      "Team 5 A",
+      "Team 5 B",
+      "Team 6 A",
+      "Team 6 B",
+    ];
   }
 
   await setInitialSceneItemValues(obs1, obs2, obs3, vmix);
@@ -245,14 +347,53 @@ const init = async () => {
     });
 
     socket.on("handleTransition", (scene) => {
-      obs1.setCurrentScene(scene);
-      if (useOBS2) obs2.setCurrentScene(scene);
-      if (useOBS3) obs3.setCurrentScene(scene);
+      if (scene.includes("Solo")) {
+        const obs = findOBS(scene.slice(5));
 
-      vmix.transition(scene);
+        switch (obs) {
+          case "OBS1":
+            obs1.setCurrentScene(scene);
+            if (useOBS2) obs2.setCurrentScene("Blank");
+            if (useOBS3) obs3.setCurrentScene("Blank");
 
-      currentScene = scene;
-      io.emit("currentScene", currentScene);
+            vmix.transition("Solo OBS1");
+
+            currentScene = scene;
+            io.emit("currentScene", currentScene);
+            break;
+          case "OBS2":
+            obs1.setCurrentScene("Blank");
+            if (useOBS2) obs2.setCurrentScene(scene);
+            if (useOBS3) obs3.setCurrentScene("Blank");
+
+            vmix.transition("Solo OBS2");
+
+            currentScene = scene;
+            io.emit("currentScene", currentScene);
+            break;
+          case "OBS3":
+            obs1.setCurrentScene("Blank");
+            if (useOBS2) obs2.setCurrentScene("Blank");
+            if (useOBS3) obs3.setCurrentScene(scenes);
+
+            vmix.transition("Solo OBS3");
+
+            currentScene = scene;
+            io.emit("currentScene", currentScene);
+            break;
+          default:
+            return;
+        }
+      } else {
+        obs1.setCurrentScene(scene);
+        if (useOBS2) obs2.setCurrentScene(scene);
+        if (useOBS3) obs3.setCurrentScene(scene);
+
+        vmix.transition(scene);
+
+        currentScene = scene;
+        io.emit("currentScene", currentScene);
+      }
     });
   });
 
@@ -306,6 +447,22 @@ const getPositionValues = (position) => {
       return { x: 0, y: 540, scale: 0.5 };
     case "Right Cam":
       return { x: 960, y: 540, scale: 0.5 };
+    case "3":
+      return { x: 0, y: 540, scale: 0.25 };
+    case "4":
+      return { x: 0, y: 810, scale: 0.25 };
+    case "5":
+      return { x: 480, y: 540, scale: 0.25 };
+    case "6":
+      return { x: 480, y: 810, scale: 0.25 };
+    case "7":
+      return { x: 960, y: 540, scale: 0.25 };
+    case "8":
+      return { x: 960, y: 810, scale: 0.25 };
+    case "9":
+      return { x: 1440, y: 540, scale: 0.25 };
+    case "10":
+      return { x: 1440, y: 810, scale: 0.25 };
     default:
       return;
   }
@@ -322,6 +479,22 @@ const getPositionLabel = (xposition, yposition, scale, type) => {
         return "Bottom Left";
       case xposition === 960 && yposition === 540 && scale === 0.5:
         return "Bottom Right";
+      case xposition === 0 && yposition === 540 && scale === 0.25:
+        return "3";
+      case xposition === 0 && yposition === 810 && scale === 0.25:
+        return "4";
+      case xposition === 480 && yposition === 540 && scale === 0.25:
+        return "5";
+      case xposition === 480 && yposition === 810 && scale === 0.25:
+        return "6";
+      case xposition === 960 && yposition === 540 && scale === 0.25:
+        return "7";
+      case xposition === 960 && yposition === 810 && scale === 0.25:
+        return "8";
+      case xposition === 1440 && yposition === 540 && scale === 0.25:
+        return "9";
+      case xposition === 1440 && yposition === 810 && scale === 0.25:
+        return "10";
       default:
         return;
     }
@@ -347,10 +520,19 @@ const getVmixLayer = (position) => {
       return 2;
     case "Bottom Left":
     case "Left Cam":
+    case "3":
       return 3;
     case "Bottom Right":
     case "Right Cam":
+    case "4":
       return 4;
+    case "5":
+    case "6":
+    case "7":
+    case "8":
+    case "9":
+    case "10":
+      return position;
     default:
       return;
   }
@@ -370,7 +552,7 @@ const addItemsToScene = async (obs1, obs2, obs3, vmix, scene) => {
 
     selectOBSAndAddItem(obs1, obs2, obs3, input, position, scene, type);
 
-    handleVmixChange(scene, position, input, vmix)
+    handleVmixChange(scene, position, input, vmix);
   }
 };
 
