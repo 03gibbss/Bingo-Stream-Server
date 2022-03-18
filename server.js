@@ -158,14 +158,6 @@ let scenes = {
       type: "Game",
       input: "Team 1 A",
     },
-    9: {
-      type: "Game",
-      input: "Team 1 A",
-    },
-    10: {
-      type: "Game",
-      input: "Team 1 A",
-    },
   },
   "All Gameplay B": {
     "Top Left": {
@@ -197,14 +189,6 @@ let scenes = {
       input: "Team 1 A",
     },
     8: {
-      type: "Game",
-      input: "Team 1 A",
-    },
-    9: {
-      type: "Game",
-      input: "Team 1 A",
-    },
-    10: {
       type: "Game",
       input: "Team 1 A",
     },
