@@ -10,9 +10,9 @@ const VMIX = require("./libs/vMix");
 
 const system = new EventEmitter();
 
-const useOBS2 = false;
+const useOBS2 = true;
 const useOBS3 = false;
-const useVmix = false;
+const useVmix = true;
 
 let state = {
   OBS1: {
@@ -368,6 +368,10 @@ const init = async () => {
           default:
             return;
         }
+      } else if (scene.includes('vMix')) {
+        vmix.transition(scene);
+        currentScene = scene;
+        io.emit("currentScene", currentScene);
       } else {
         obs1.setCurrentScene(scene);
         if (useOBS2) obs2.setCurrentScene(scene);
