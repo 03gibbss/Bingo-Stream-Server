@@ -10,9 +10,9 @@ const VMIX = require("./libs/vMix");
 
 const system = new EventEmitter();
 
-const useOBS2 = true;
-const useOBS3 = false;
-const useVmix = true;
+const useOBS2 = process.env.OBS2ACTIVE === "true" ? true : false;
+const useOBS3 = process.env.OBS3ACTIVE === "true" ? true : false;
+const useVmix = process.env.VMIXACTIVE === "true" ? true : false;
 
 let state = {
   OBS1: {
@@ -28,6 +28,7 @@ let state = {
     connected: false,
   },
   availableInputs: [],
+  playerNames: [],
 };
 
 let currentScene = "Multiview A";
@@ -270,6 +271,13 @@ const init = async () => {
       "Team 2 A",
       "Team 2 B",
     ];
+    state.playerNames = [
+      ...state.playerNames,
+      `1: ${process.env.PLAYER1}`,
+      `2: ${process.env.PLAYER2}`,
+      `3: ${process.env.PLAYER3}`,
+      `4: ${process.env.PLAYER4}`,
+    ];
   }
 
   if (state["OBS2"].connected) {
@@ -280,6 +288,13 @@ const init = async () => {
       "Team 4 A",
       "Team 4 B",
     ];
+    state.playerNames = [
+      ...state.playerNames,
+      `5: ${process.env.PLAYER5}`,
+      `6: ${process.env.PLAYER6}`,
+      `7: ${process.env.PLAYER7}`,
+      `8: ${process.env.PLAYER8}`,
+    ];
   }
 
   if (state["OBS3"].connected) {
@@ -289,6 +304,13 @@ const init = async () => {
       "Team 5 B",
       "Team 6 A",
       "Team 6 B",
+    ];
+    state.playerNames = [
+      ...state.playerNames,
+      `9: ${process.env.PLAYER9}`,
+      `10: ${process.env.PLAYER10}`,
+      `11: ${process.env.PLAYER11}`,
+      `12: ${process.env.PLAYER12}`,
     ];
   }
 
@@ -368,7 +390,7 @@ const init = async () => {
           default:
             return;
         }
-      } else if (scene.includes('vMix')) {
+      } else if (scene.includes("vMix")) {
         vmix.transition(scene);
         currentScene = scene;
         io.emit("currentScene", currentScene);
