@@ -29,6 +29,7 @@ module.exports = class OBS {
           resolve();
         })
         .catch((err) => {
+          process.exit(0);
           reject(err);
         });
     });
@@ -69,7 +70,7 @@ module.exports = class OBS {
           },
         })
         .then(() => {
-          console.log(`${itemId} Properties Set`);
+          console.log(`${itemId} Properties Set | ${xposition} ${yposition}`);
           resolve();
         })
         .catch((err) => reject(err));
@@ -84,7 +85,7 @@ module.exports = class OBS {
           sourceName: sourceName,
         })
         .then((data) => {
-          console.log(`${data.itemId} added`);
+          console.log(`${data.itemId} added ${scene} | ${sourceName}`);
           resolve(data.itemId);
         })
         .catch((err) => reject(err));

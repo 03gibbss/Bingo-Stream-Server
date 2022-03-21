@@ -8,6 +8,10 @@ const { Server } = require("socket.io");
 const OBS = require("./libs/OBS");
 const VMIX = require("./libs/vMix");
 
+const scenePresets = require("./presets");
+
+let availablePresets = {};
+
 const system = new EventEmitter();
 
 const useOBS2 = process.env.OBS2ACTIVE === "true" ? true : false;
@@ -33,168 +37,7 @@ let state = {
 
 let currentScene = "Multiview A";
 
-let scenes = {
-  "Quad A": {
-    "Top Left": {
-      type: "Game",
-      input: "Team 1 A",
-    },
-    "Top Right": {
-      type: "Game",
-      input: "Team 1 A",
-    },
-    "Bottom Left": {
-      type: "Game",
-      input: "Team 1 A",
-    },
-    "Bottom Right": {
-      type: "Game",
-      input: "Team 1 A",
-    },
-  },
-  "Quad B": {
-    "Top Left": {
-      type: "Game",
-      input: "Team 1 A",
-    },
-    "Top Right": {
-      type: "Game",
-      input: "Team 1 A",
-    },
-    "Bottom Left": {
-      type: "Game",
-      input: "Team 1 A",
-    },
-    "Bottom Right": {
-      type: "Game",
-      input: "Team 1 A",
-    },
-  },
-  "Dual A": {
-    "Top Left": {
-      type: "Game",
-      input: "Team 1 A",
-    },
-    "Top Right": {
-      type: "Game",
-      input: "Team 1 A",
-    },
-  },
-  "Dual B": {
-    "Top Left": {
-      type: "Game",
-      input: "Team 1 A",
-    },
-    "Top Right": {
-      type: "Game",
-      input: "Team 1 A",
-    },
-  },
-  "Dual with Cams A": {
-    "Top Left": {
-      type: "Game",
-      input: "Team 1 A",
-    },
-    "Top Right": {
-      type: "Game",
-      input: "Team 1 A",
-    },
-    "Left Cam": {
-      type: "Cam",
-      input: "Team 1 A",
-    },
-    "Right Cam": {
-      type: "Cam",
-      input: "Team 1 A",
-    },
-  },
-  "Dual with Cams B": {
-    "Top Left": {
-      type: "Game",
-      input: "Team 1 A",
-    },
-    "Top Right": {
-      type: "Game",
-      input: "Team 1 A",
-    },
-    "Left Cam": {
-      type: "Cam",
-      input: "Team 1 A",
-    },
-    "Right Cam": {
-      type: "Cam",
-      input: "Team 1 A",
-    },
-  },
-  "All Gameplay A": {
-    "Top Left": {
-      type: "Game",
-      input: "Team 1 A",
-    },
-    "Top Right": {
-      type: "Game",
-      input: "Team 1 A",
-    },
-    3: {
-      type: "Game",
-      input: "Team 1 A",
-    },
-    4: {
-      type: "Game",
-      input: "Team 1 A",
-    },
-    5: {
-      type: "Game",
-      input: "Team 1 A",
-    },
-    6: {
-      type: "Game",
-      input: "Team 1 A",
-    },
-    7: {
-      type: "Game",
-      input: "Team 1 A",
-    },
-    8: {
-      type: "Game",
-      input: "Team 1 A",
-    },
-  },
-  "All Gameplay B": {
-    "Top Left": {
-      type: "Game",
-      input: "Team 1 A",
-    },
-    "Top Right": {
-      type: "Game",
-      input: "Team 1 A",
-    },
-    3: {
-      type: "Game",
-      input: "Team 1 A",
-    },
-    4: {
-      type: "Game",
-      input: "Team 1 A",
-    },
-    5: {
-      type: "Game",
-      input: "Team 1 A",
-    },
-    6: {
-      type: "Game",
-      input: "Team 1 A",
-    },
-    7: {
-      type: "Game",
-      input: "Team 1 A",
-    },
-    8: {
-      type: "Game",
-      input: "Team 1 A",
-    },
-  },
-};
+let scenes = require("./presets/scenes");
 
 const httpServer = createServer();
 
@@ -211,6 +54,60 @@ const init = async () => {
     port: process.env.OBS1PORT,
     password: "",
     name: "OBS1",
+  });
+
+  if (useOBS2 && useOBS3) {
+    availablePresets = scenePresets;
+  } else if (useOBS2) {
+  } else {
+  }
+
+  // set available presets
+
+  // filter to remove any input 3 a etc
+  Object.keys(scenePresets).map((key) => {
+    const scene = key;
+    let presets = [];
+    scenePresets[key].map((preset) => {
+      const name = preset.name;
+      const inputs = Object.keys(preset.values).map((key) => {
+        const position = key;
+        const value = preset.values[key];
+        return value.input;
+      });
+
+      const needsOBS2 =
+        inputs.find(
+          (input) =>
+            input === "Team 3 A" ||
+            input === "Team 3 B" ||
+            input === "Team 4 A" ||
+            input === "Team 4 B"
+        ) === undefined
+          ? false
+          : true;
+
+      const needsOBS3 =
+        inputs.find(
+          (input) =>
+            input === "Team 5 A" ||
+            input === "Team 5 B" ||
+            input === "Team 6 A" ||
+            input === "Team 6 B"
+        ) === undefined
+          ? false
+          : true;
+
+      if (needsOBS3 && useOBS3) {
+        presets.push(preset);
+      } else if (needsOBS2 && useOBS2 && !needsOBS3) {
+        presets.push(preset);
+      } else if (!needsOBS2 && !needsOBS3) {
+        presets.push(preset);
+      }
+    });
+
+    availablePresets[scene] = presets;
   });
 
   try {
@@ -273,10 +170,10 @@ const init = async () => {
     ];
     state.playerNames = [
       ...state.playerNames,
-      `1: ${process.env.PLAYER1}`,
-      `2: ${process.env.PLAYER2}`,
-      `3: ${process.env.PLAYER3}`,
-      `4: ${process.env.PLAYER4}`,
+      `1A: ${process.env.PLAYER1}`,
+      `1B: ${process.env.PLAYER2}`,
+      `2A: ${process.env.PLAYER3}`,
+      `2B: ${process.env.PLAYER4}`,
     ];
   }
 
@@ -290,10 +187,10 @@ const init = async () => {
     ];
     state.playerNames = [
       ...state.playerNames,
-      `5: ${process.env.PLAYER5}`,
-      `6: ${process.env.PLAYER6}`,
-      `7: ${process.env.PLAYER7}`,
-      `8: ${process.env.PLAYER8}`,
+      `3A: ${process.env.PLAYER5}`,
+      `3B: ${process.env.PLAYER6}`,
+      `4A: ${process.env.PLAYER7}`,
+      `4B: ${process.env.PLAYER8}`,
     ];
   }
 
@@ -307,10 +204,10 @@ const init = async () => {
     ];
     state.playerNames = [
       ...state.playerNames,
-      `9: ${process.env.PLAYER9}`,
-      `10: ${process.env.PLAYER10}`,
-      `11: ${process.env.PLAYER11}`,
-      `12: ${process.env.PLAYER12}`,
+      `5A: ${process.env.PLAYER9}`,
+      `5B: ${process.env.PLAYER10}`,
+      `6A: ${process.env.PLAYER11}`,
+      `6B: ${process.env.PLAYER12}`,
     ];
   }
 
@@ -333,23 +230,36 @@ const init = async () => {
 
     socket.emit("currentScene", currentScene);
 
-    socket.on("handleChange", (scene, position, input) => {
+    socket.emit("presetInfo", availablePresets);
+
+    socket.on("handlePreset", async (scene, preset) => {
       if (scene === currentScene) return;
 
-      let type = "Game";
+      const storedPreset = scenePresets[scene].find((p) => {
+        return p.name === preset;
+      });
 
-      if (position.includes("Cam")) {
-        type = "Cam";
+      for (const key of Object.keys(storedPreset.values)) {
+        try {
+          await handleChange(
+            scene,
+            key,
+            storedPreset.values[key].input,
+            obs1,
+            obs2,
+            obs3,
+            vmix,
+            io
+          );
+        } catch (err) {
+          console.log(err);
+        }
+        setTimeout(() => {}, 50);
       }
+    });
 
-      scenes[scene][position]["input"] = input;
-      scenes[scene][position]["type"] = type;
-
-      handleChange(scene, position, input, type, obs1, obs2, obs3);
-
-      handleVmixChange(scene, position, input, vmix);
-
-      io.emit("sceneInfo", scenes);
+    socket.on("handleChange", (scene, position, input) => {
+      handleChange(scene, position, input, obs1, obs2, obs3, vmix, io);
     });
 
     socket.on("handleTransition", (scene) => {
@@ -595,20 +505,23 @@ const selectOBSAndAddItem = (
 };
 
 const addItemToScene = async (obs, sceneName, type, input, position) => {
-  const id = await obs.addSceneItem(sceneName, `${type} ${input}`);
+  return new Promise(async (resolve, reject) => {
+    try {
+      const id = await obs.addSceneItem(sceneName, `${type} ${input}`);
 
-  await obs
-    .setSceneItemProperties(
-      sceneName,
-      id,
-      position.x,
-      position.y,
-      position.scale
-    )
-    .then()
-    .catch((err) => {
-      console.log(err);
-    });
+      await obs.setSceneItemProperties(
+        sceneName,
+        id,
+        position.x,
+        position.y,
+        position.scale
+      );
+
+      resolve();
+    } catch (err) {
+      reject(err);
+    }
+  });
 };
 
 const setInitialSceneItemValues = async (obs1, obs2, obs3, vmix) => {
@@ -648,7 +561,43 @@ const deleteItemInPosition = async (scene, position, type, obs) => {
   }
 };
 
-const handleChange = async (scene, position, input, type, obs1, obs2, obs3) => {
+const handleChange = async (
+  scene,
+  position,
+  input,
+  obs1,
+  obs2,
+  obs3,
+  vmix,
+  io
+) => {
+  return new Promise((resolve, reject) => {
+    if (scene === currentScene) return reject();
+    if (scenes[scene][position]["input"] === input)
+      return reject("Position already set to input");
+
+    let type = "Game";
+
+    if (position.includes("Cam")) {
+      type = "Cam";
+    }
+
+    scenes[scene][position]["input"] = input;
+    scenes[scene][position]["type"] = type;
+
+    handleOBSChange(scene, position, input, type, obs1, obs2, obs3);
+
+    handleVmixChange(scene, position, input, vmix);
+
+    io.emit("sceneInfo", scenes);
+
+    setTimeout(() => {
+      resolve();
+    }, 50);
+  });
+};
+
+const handleOBSChange = (scene, position, input, type, obs1, obs2, obs3) => {
   deleteItemInPosition(scene, position, type, obs1);
   if (useOBS2) deleteItemInPosition(scene, position, type, obs2);
   if (useOBS3) deleteItemInPosition(scene, position, type, obs3);
@@ -656,7 +605,7 @@ const handleChange = async (scene, position, input, type, obs1, obs2, obs3) => {
   selectOBSAndAddItem(obs1, obs2, obs3, input, position, scene, type);
 };
 
-const handleVmixChange = async (scene, position, input, vmix) => {
+const handleVmixChange = (scene, position, input, vmix) => {
   const layer = getVmixLayer(position);
 
   const obs = findOBS(input);
