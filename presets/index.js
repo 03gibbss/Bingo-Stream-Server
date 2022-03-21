@@ -1,7 +1,7 @@
 module.exports = scenePresets = {
   "Quad A": [
     {
-      name: "1A 1B 2A 2B",
+      name: "1 v 2",
       values: {
         "Top Left": {
           type: "Game",
@@ -22,7 +22,7 @@ module.exports = scenePresets = {
       },
     },
     {
-      name: "3A 3B 4A 4B",
+      name: "3 v 4",
       values: {
         "Top Left": {
           type: "Game",
@@ -43,7 +43,7 @@ module.exports = scenePresets = {
       },
     },
     {
-      name: "1A 1B 3A 3B",
+      name: "1 v 3",
       values: {
         "Top Left": {
           type: "Game",
@@ -64,7 +64,7 @@ module.exports = scenePresets = {
       },
     },
     {
-      name: "1A 1B 4A 4B",
+      name: "1 v 4",
       values: {
         "Top Left": {
           type: "Game",
@@ -85,7 +85,7 @@ module.exports = scenePresets = {
       },
     },
     {
-      name: "5A 5B 6A 6B",
+      name: "5 v 6",
       values: {
         "Top Left": {
           type: "Game",
@@ -106,7 +106,7 @@ module.exports = scenePresets = {
       },
     },
     {
-      name: "2A 2B 3A 3B",
+      name: "2 v 3",
       values: {
         "Top Left": {
           type: "Game",
@@ -127,7 +127,7 @@ module.exports = scenePresets = {
       },
     },
     {
-      name: "2A 2B 4A 4B",
+      name: "2 v 4",
       values: {
         "Top Left": {
           type: "Game",
@@ -148,7 +148,7 @@ module.exports = scenePresets = {
       },
     },
     {
-      name: "3A 3B 4A 4B",
+      name: "3 v 4",
       values: {
         "Top Left": {
           type: "Game",
@@ -407,7 +407,7 @@ module.exports = scenePresets = {
   ],
   "Quad B": [
     {
-      name: "1A 1B 2A 2B",
+      name: "1 v 2",
       values: {
         "Top Left": {
           type: "Game",
@@ -428,7 +428,7 @@ module.exports = scenePresets = {
       },
     },
     {
-      name: "3A 3B 4A 4B",
+      name: "3 v 4",
       values: {
         "Top Left": {
           type: "Game",
@@ -449,7 +449,7 @@ module.exports = scenePresets = {
       },
     },
     {
-      name: "1A 1B 3A 3B",
+      name: "1 v 3",
       values: {
         "Top Left": {
           type: "Game",
@@ -470,7 +470,7 @@ module.exports = scenePresets = {
       },
     },
     {
-      name: "1A 1B 4A 4B",
+      name: "1 v 4",
       values: {
         "Top Left": {
           type: "Game",
@@ -491,7 +491,7 @@ module.exports = scenePresets = {
       },
     },
     {
-      name: "5A 5B 6A 6B",
+      name: "5 v 6",
       values: {
         "Top Left": {
           type: "Game",
@@ -512,7 +512,7 @@ module.exports = scenePresets = {
       },
     },
     {
-      name: "2A 2B 3A 3B",
+      name: "2 v 3",
       values: {
         "Top Left": {
           type: "Game",
@@ -533,7 +533,7 @@ module.exports = scenePresets = {
       },
     },
     {
-      name: "2A 2B 4A 4B",
+      name: "2 v 4",
       values: {
         "Top Left": {
           type: "Game",
@@ -554,7 +554,7 @@ module.exports = scenePresets = {
       },
     },
     {
-      name: "3A 3B 4A 4B",
+      name: "3 v 4",
       values: {
         "Top Left": {
           type: "Game",

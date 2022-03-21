@@ -1,9 +1,8 @@
 const OBSWebSocket = require("obs-websocket-js");
 
 module.exports = class OBS {
-  constructor(system, io, config) {
+  constructor(system, config) {
     this.system = system;
-    this.io = io;
     this.config = config;
     this.obs = new OBSWebSocket();
     this.events();
@@ -45,7 +44,7 @@ module.exports = class OBS {
           },
         })
         .then(() => {
-          console.log(`${itemId} deleted`);
+          console.log(`${this.config.name} | ${scene} [${itemId}] deleted`);
           resolve();
         })
         .catch((err) => reject(err));
@@ -70,7 +69,9 @@ module.exports = class OBS {
           },
         })
         .then(() => {
-          console.log(`${itemId} Properties Set | ${xposition} ${yposition}`);
+          console.log(
+            `${this.config.name} | ${scene} [${itemId}] Properties Set | X:${xposition} Y:${yposition} Scale:${scale}`
+          );
           resolve();
         })
         .catch((err) => reject(err));
@@ -85,7 +86,9 @@ module.exports = class OBS {
           sourceName: sourceName,
         })
         .then((data) => {
-          console.log(`${data.itemId} added ${scene} | ${sourceName}`);
+          console.log(
+            `${this.config.name} | ${scene} [${data.itemId}] added | ${sourceName}`
+          );
           resolve(data.itemId);
         })
         .catch((err) => reject(err));
@@ -99,6 +102,7 @@ module.exports = class OBS {
           "scene-name": scene,
         })
         .then(() => {
+          console.log(`${this.config.name} | Transition to ${scene}`);
           resolve();
         })
         .catch((err) => reject(err));

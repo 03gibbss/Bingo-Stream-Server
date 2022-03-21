@@ -49,22 +49,6 @@ const init = async () => {
     },
   });
 
-  const obs1 = new OBS(system, io, {
-    address: process.env.OBS1ADDRESS,
-    port: process.env.OBS1PORT,
-    password: "",
-    name: "OBS1",
-  });
-
-  if (useOBS2 && useOBS3) {
-    availablePresets = scenePresets;
-  } else if (useOBS2) {
-  } else {
-  }
-
-  // set available presets
-
-  // filter to remove any input 3 a etc
   Object.keys(scenePresets).map((key) => {
     const scene = key;
     let presets = [];
@@ -110,6 +94,13 @@ const init = async () => {
     availablePresets[scene] = presets;
   });
 
+  const obs1 = new OBS(system, {
+    address: process.env.OBS1ADDRESS,
+    port: process.env.OBS1PORT,
+    password: "",
+    name: "OBS1",
+  });
+
   try {
     await obs1.connect();
     state["OBS1"].connected = true;
@@ -120,7 +111,7 @@ const init = async () => {
   let obs2;
 
   if (useOBS2) {
-    obs2 = new OBS(system, io, {
+    obs2 = new OBS(system, {
       address: process.env.OBS2ADDRESS,
       port: process.env.OBS2PORT,
       password: "",
@@ -138,7 +129,7 @@ const init = async () => {
   let obs3;
 
   if (useOBS3) {
-    obs3 = new OBS(system, io, {
+    obs3 = new OBS(system, {
       address: process.env.OBS3ADDRESS,
       port: process.env.OBS3PORT,
       password: "",
@@ -153,7 +144,7 @@ const init = async () => {
     }
   }
 
-  let vmix = new VMIX(system, io, {
+  let vmix = new VMIX(system, {
     address: process.env.VMIXADDRESS,
     active: useVmix,
   });
@@ -211,7 +202,11 @@ const init = async () => {
     ];
   }
 
-  await setInitialSceneItemValues(obs1, obs2, obs3, vmix);
+  try {
+    setInitialSceneItemValues(obs1, obs2, obs3, vmix);
+  } catch (err) {
+    console.log(err);
+  }
 
   console.log(
     colors.green.bold(`Websocket available on port: ${process.env.PORT}`)
@@ -239,7 +234,7 @@ const init = async () => {
         return p.name === preset;
       });
 
-      for (const key of Object.keys(storedPreset.values)) {
+      Object.keys(storedPreset.values).map(async (key) => {
         try {
           await handleChange(
             scene,
@@ -254,23 +249,44 @@ const init = async () => {
         } catch (err) {
           console.log(err);
         }
-        setTimeout(() => {}, 50);
-      }
+      });
+
+      // for (const key of Object.keys(storedPreset.values)) {
+      //   try {
+      //     await handleChange(
+      //       scene,
+      //       key,
+      //       storedPreset.values[key].input,
+      //       obs1,
+      //       obs2,
+      //       obs3,
+      //       vmix,
+      //       io
+      //     );
+      //   } catch (err) {
+      //     console.log(err);
+      //   }
+      //   setTimeout(() => {}, 50);
+      // }
     });
 
-    socket.on("handleChange", (scene, position, input) => {
-      handleChange(scene, position, input, obs1, obs2, obs3, vmix, io);
+    socket.on("handleChange", async (scene, position, input) => {
+      await handleChange(scene, position, input, obs1, obs2, obs3, vmix, io);
     });
 
-    socket.on("handleTransition", (scene) => {
+    socket.on("handleTransition", async (scene) => {
       if (scene.includes("Solo")) {
         const obs = findOBS(scene.slice(5));
 
         switch (obs) {
           case "OBS1":
-            obs1.setCurrentScene(scene);
-            if (useOBS2) obs2.setCurrentScene("Blank");
-            if (useOBS3) obs3.setCurrentScene("Blank");
+            try {
+              await obs1.setCurrentScene(scene);
+              if (useOBS2) await obs2.setCurrentScene("Blank");
+              if (useOBS3) await obs3.setCurrentScene("Blank");
+            } catch (err) {
+              console.log(err);
+            }
 
             vmix.transition("Solo OBS1");
 
@@ -278,9 +294,13 @@ const init = async () => {
             io.emit("currentScene", currentScene);
             break;
           case "OBS2":
-            obs1.setCurrentScene("Blank");
-            if (useOBS2) obs2.setCurrentScene(scene);
-            if (useOBS3) obs3.setCurrentScene("Blank");
+            try {
+              await obs1.setCurrentScene("Blank");
+              if (useOBS2) await obs2.setCurrentScene(scene);
+              if (useOBS3) await obs3.setCurrentScene("Blank");
+            } catch (err) {
+              console.log(err);
+            }
 
             vmix.transition("Solo OBS2");
 
@@ -288,9 +308,13 @@ const init = async () => {
             io.emit("currentScene", currentScene);
             break;
           case "OBS3":
-            obs1.setCurrentScene("Blank");
-            if (useOBS2) obs2.setCurrentScene("Blank");
-            if (useOBS3) obs3.setCurrentScene(scenes);
+            try {
+              await obs1.setCurrentScene("Blank");
+              if (useOBS2) await obs2.setCurrentScene("Blank");
+              if (useOBS3) await obs3.setCurrentScene(scenes);
+            } catch (err) {
+              console.log(err);
+            }
 
             vmix.transition("Solo OBS3");
 
@@ -305,9 +329,13 @@ const init = async () => {
         currentScene = scene;
         io.emit("currentScene", currentScene);
       } else {
-        obs1.setCurrentScene(scene);
-        if (useOBS2) obs2.setCurrentScene(scene);
-        if (useOBS3) obs3.setCurrentScene(scene);
+        try {
+          await obs1.setCurrentScene(scene);
+          if (useOBS2) await obs2.setCurrentScene(scene);
+          if (useOBS3) await obs3.setCurrentScene(scene);
+        } catch (err) {
+          console.log(err);
+        }
 
         vmix.transition(scene);
 
@@ -528,25 +556,41 @@ const setInitialSceneItemValues = async (obs1, obs2, obs3, vmix) => {
   const sceneNames = Object.keys(scenes);
 
   for (const scene of sceneNames) {
-    await deleteAllItemsInScene(obs1, scene);
+    try {
+      await deleteAllItemsInScene(obs1, scene);
 
-    if (useOBS2) {
-      await deleteAllItemsInScene(obs2, scene);
+      if (useOBS2) {
+        await deleteAllItemsInScene(obs2, scene);
+      }
+
+      if (useOBS3) {
+        await deleteAllItemsInScene(obs3, scene);
+      }
+
+      await addItemsToScene(obs1, obs2, obs3, vmix, scene);
+    } catch (err) {
+      console.log(err);
     }
-
-    if (useOBS3) {
-      await deleteAllItemsInScene(obs3, scene);
-    }
-
-    await addItemsToScene(obs1, obs2, obs3, vmix, scene);
   }
 };
 
 const deleteItemInPosition = async (scene, position, type, obs) => {
-  const sceneItems = await obs.getSceneItemList(scene);
+  const sceneItems = await obs
+    .getSceneItemList(scene)
+    .then()
+    .catch((err) => console.log(err));
 
   for (const { itemId } of sceneItems) {
-    const itemProperties = await obs.getSceneItemProperties(scene, itemId);
+    const itemProperties = await obs
+      .getSceneItemProperties(scene, itemId)
+      .then()
+      .catch((err) => {
+        console.log(err);
+      });
+
+    // error was being caused if itemId couldn't be found in scene
+    // this if statement might cause some items not to be deleted, need to test
+    if (!itemProperties) return;
 
     const positionLabel = getPositionLabel(
       itemProperties.position.x,
@@ -556,7 +600,10 @@ const deleteItemInPosition = async (scene, position, type, obs) => {
     );
 
     if (positionLabel === position) {
-      await obs.deleteSceneItem(scene, itemId);
+      await obs
+        .deleteSceneItem(scene, itemId)
+        .then()
+        .catch((err) => console.log(err));
     }
   }
 };

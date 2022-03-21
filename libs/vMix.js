@@ -1,9 +1,8 @@
 const { ConnectionTCP } = require("node-vmix");
 
 module.exports = class vMix {
-  constructor(system, io, config) {
+  constructor(system, config) {
     this.system = system;
-    this.io = io;
     this.config = config;
     if (config.active) {
       this.vmix = new ConnectionTCP(config.address);
@@ -20,7 +19,7 @@ module.exports = class vMix {
       });
     }
 
-    console.log(`Set vMix layer to ${scene} value: ${layer},${obs}`);
+    console.log(`vMix | Layer to ${layer} set to ${scene} [${obs}]`);
   }
 
   transition(scene) {
@@ -29,7 +28,7 @@ module.exports = class vMix {
       this.vmix.send({ Function: "Transition2" });
     }
 
-    console.log(`Transition vmix to ${scene}`);
+    console.log(`vMix | Transition to ${scene}`);
   }
 
   events() {
