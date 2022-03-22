@@ -276,12 +276,22 @@ const init = async () => {
 
     socket.on("handleTransition", async (scene) => {
       if (scene.includes("Solo")) {
-        const obs = findOBS(scene.slice(5));
+        const playerName = scene.slice(6);
+
+        const idx = state.playerNames.findIndex(p => p === playerName);
+
+        const input = state.availableInputs[idx];
+
+        console.log(playerName, idx, input)
+
+        const obs = findOBS(input);
+
+        const newScene = `Solo ${input}`;
 
         switch (obs) {
           case "OBS1":
             try {
-              await obs1.setCurrentScene(scene);
+              await obs1.setCurrentScene(newScene);
               if (useOBS2) await obs2.setCurrentScene("Blank");
               if (useOBS3) await obs3.setCurrentScene("Blank");
             } catch (err) {
@@ -296,7 +306,7 @@ const init = async () => {
           case "OBS2":
             try {
               await obs1.setCurrentScene("Blank");
-              if (useOBS2) await obs2.setCurrentScene(scene);
+              if (useOBS2) await obs2.setCurrentScene(newScene);
               if (useOBS3) await obs3.setCurrentScene("Blank");
             } catch (err) {
               console.log(err);
@@ -311,7 +321,7 @@ const init = async () => {
             try {
               await obs1.setCurrentScene("Blank");
               if (useOBS2) await obs2.setCurrentScene("Blank");
-              if (useOBS3) await obs3.setCurrentScene(scenes);
+              if (useOBS3) await obs3.setCurrentScene(newScene);
             } catch (err) {
               console.log(err);
             }
