@@ -2,6 +2,7 @@ require("dotenv").config();
 
 const colors = require("colors");
 const EventEmitter = require("events");
+const { response } = require("express");
 const { createServer } = require("http");
 const { Server } = require("socket.io");
 
@@ -250,24 +251,6 @@ const init = async () => {
           console.log(err);
         }
       });
-
-      // for (const key of Object.keys(storedPreset.values)) {
-      //   try {
-      //     await handleChange(
-      //       scene,
-      //       key,
-      //       storedPreset.values[key].input,
-      //       obs1,
-      //       obs2,
-      //       obs3,
-      //       vmix,
-      //       io
-      //     );
-      //   } catch (err) {
-      //     console.log(err);
-      //   }
-      //   setTimeout(() => {}, 50);
-      // }
     });
 
     socket.on("handleChange", async (scene, position, input) => {
@@ -277,15 +260,9 @@ const init = async () => {
     socket.on("handleTransition", async (scene) => {
       if (scene.includes("Solo")) {
         const playerName = scene.slice(6);
-
-        const idx = state.playerNames.findIndex(p => p === playerName);
-
+        const idx = state.playerNames.findIndex((p) => p === playerName);
         const input = state.availableInputs[idx];
-
-        console.log(playerName, idx, input)
-
         const obs = findOBS(input);
-
         const newScene = `Solo ${input}`;
 
         switch (obs) {
@@ -585,37 +562,38 @@ const setInitialSceneItemValues = async (obs1, obs2, obs3, vmix) => {
 };
 
 const deleteItemInPosition = async (scene, position, type, obs) => {
-  const sceneItems = await obs
-    .getSceneItemList(scene)
-    .then()
-    .catch((err) => console.log(err));
-
-  for (const { itemId } of sceneItems) {
-    const itemProperties = await obs
-      .getSceneItemProperties(scene, itemId)
+  return new Promise(async (resolve, reject) => {
+    const sceneItems = await obs
+      .getSceneItemList(scene)
       .then()
-      .catch((err) => {
-        console.log(err);
-      });
+      .catch((err) => reject(err));
 
-    // error was being caused if itemId couldn't be found in scene
-    // this if statement might cause some items not to be deleted, need to test
-    if (!itemProperties) return;
-
-    const positionLabel = getPositionLabel(
-      itemProperties.position.x,
-      itemProperties.position.y,
-      itemProperties.scale.x,
-      type
-    );
-
-    if (positionLabel === position) {
-      await obs
-        .deleteSceneItem(scene, itemId)
+    for (const { itemId } of sceneItems) {
+      const itemProperties = await obs
+        .getSceneItemProperties(scene, itemId)
         .then()
-        .catch((err) => console.log(err));
+        .catch((err) => reject(err));
+
+      // error was being caused if itemId couldn't be found in scene
+      // this if statement might cause some items not to be deleted, need to test
+      if (!itemProperties) return;
+
+      const positionLabel = getPositionLabel(
+        itemProperties.position.x,
+        itemProperties.position.y,
+        itemProperties.scale.x,
+        type
+      );
+
+      if (positionLabel === position) {
+        await obs
+          .deleteSceneItem(scene, itemId)
+          .then()
+          .catch((err) => console.log(err));
+      }
     }
-  }
+    resolve();
+  });
 };
 
 const handleChange = async (
@@ -654,10 +632,22 @@ const handleChange = async (
   });
 };
 
-const handleOBSChange = (scene, position, input, type, obs1, obs2, obs3) => {
-  deleteItemInPosition(scene, position, type, obs1);
-  if (useOBS2) deleteItemInPosition(scene, position, type, obs2);
-  if (useOBS3) deleteItemInPosition(scene, position, type, obs3);
+const handleOBSChange = async (
+  scene,
+  position,
+  input,
+  type,
+  obs1,
+  obs2,
+  obs3
+) => {
+  try {
+    await deleteItemInPosition(scene, position, type, obs1);
+    if (useOBS2) await deleteItemInPosition(scene, position, type, obs2);
+    if (useOBS3) await deleteItemInPosition(scene, position, type, obs3);
+  } catch (err) {
+    console.log(err);
+  }
 
   selectOBSAndAddItem(obs1, obs2, obs3, input, position, scene, type);
 };
