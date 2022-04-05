@@ -35,6 +35,8 @@ let state = {
   availableInputs: [],
   playerNames: [],
   muteStates: [],
+  gameVisibility: [],
+  camVisibility: [],
 };
 
 let currentScene = "Multiview A";
@@ -169,6 +171,8 @@ const init = async () => {
       `2B: ${process.env.PLAYER4}`,
     ];
     state.muteStates = [...state.muteStates, true, true, true, true];
+    state.gameVisibility = [...state.gameVisibility, true, true, true, true];
+    state.camVisibility = [...state.gameVisibility, true, true, true, true];
   }
 
   if (state["OBS2"].connected) {
@@ -187,6 +191,8 @@ const init = async () => {
       `4B: ${process.env.PLAYER8}`,
     ];
     state.muteStates = [...state.muteStates, true, true, true, true];
+    state.gameVisibility = [...state.gameVisibility, true, true, true, true];
+    state.camVisibility = [...state.gameVisibility, true, true, true, true];
   }
 
   if (state["OBS3"].connected) {
@@ -205,6 +211,8 @@ const init = async () => {
       `6B: ${process.env.PLAYER12}`,
     ];
     state.muteStates = [...state.muteStates, true, true, true, true];
+    state.gameVisibility = [...state.gameVisibility, true, true, true, true];
+    state.camVisibility = [...state.gameVisibility, true, true, true, true];
   }
 
   state.availableInputs.forEach(async (input) => {
@@ -214,12 +222,18 @@ const init = async () => {
       switch (obs) {
         case "OBS1":
           await obs1.setMute(`${input} Input`, true);
+          await obs1.setSceneItemVisibility(`Game ${input}`, input, true);
+          await obs1.setSceneItemVisibility(`Cam ${input}`, input, true);
           break;
         case "OBS2":
           await obs2.setMute(`${input} Input`, true);
+          await obs2.setSceneItemVisibility(`Game ${input}`, input, true);
+          await obs2.setSceneItemVisibility(`Cam ${input}`, input, true);
           break;
         case "OBS3":
           await obs3.setMute(`${input} Input`, true);
+          await obs3.setSceneItemVisibility(`Game ${input}`, input, true);
+          await obs3.setSceneItemVisibility(`Cam ${input}`, input, true);
           break;
         default:
       }
@@ -366,6 +380,8 @@ const init = async () => {
 
         const obs = findOBS(scene);
 
+        io.emit("muteStates", state.muteStates);
+
         switch (obs) {
           case "OBS1":
             await obs1.setMute(`${scene} Input`, newState);
@@ -378,8 +394,43 @@ const init = async () => {
             break;
           default:
         }
+      } catch (err) {
+        console.log(err);
+      }
+    });
 
-        io.emit("muteStates", state.muteStates);
+    socket.on("handleVisibilityToggle", async (scene, type) => {
+      try {
+        const idx = state.availableInputs.findIndex((input) => input === scene);
+
+        console.log("breaks here", scene, type);
+
+        const newState = !state[`${type}Visibility`][idx];
+
+        state[`${type}Visibility`][idx] = newState;
+
+        const obs = findOBS(scene);
+
+        const sceneName = type === "game" ? `Game ${scene}` : `Cam ${scene}`;
+
+        if (type === "game") {
+          io.emit("gameVisibility", state.gameVisibility);
+        } else {
+          io.emit("camVisibility", state.camVisibility);
+        }
+
+        switch (obs) {
+          case "OBS1":
+            await obs1.setSceneItemVisibility(sceneName, scene, newState);
+            break;
+          case "OBS2":
+            await obs2.setSceneItemVisibility(sceneName, scene, newState);
+            break;
+          case "OBS3":
+            await obs3.setSceneItemVisibility(sceneName, scene, newState);
+            break;
+          default:
+        }
       } catch (err) {
         console.log(err);
       }

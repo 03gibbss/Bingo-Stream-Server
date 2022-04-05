@@ -155,6 +155,28 @@ module.exports = class OBS {
     });
   }
 
+  setSceneItemVisibility(sceneName, itemName, visible) {
+    return new Promise((resolve, reject) => {
+      this.obs
+        .send("SetSceneItemProperties", {
+          "scene-name": sceneName,
+          item: {
+            name: itemName,
+          },
+          visible: visible,
+        })
+        .then(() => {
+          console.log(
+            `${this.config.name} | ${sceneName} [${itemName}] is ${
+              visible ? "" : "not "
+            }visible`
+          );
+          resolve();
+        })
+        .catch((err) => reject(err));
+    });
+  }
+
   events() {
     this.obs.on("error", (err) => {
       console.log(err);
