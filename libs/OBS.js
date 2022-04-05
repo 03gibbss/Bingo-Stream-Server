@@ -28,8 +28,8 @@ module.exports = class OBS {
           resolve();
         })
         .catch((err) => {
+          console.log(err);
           process.exit(0);
-          reject(err);
         });
     });
   }
@@ -132,6 +132,23 @@ module.exports = class OBS {
           },
         })
         .then((data) => {
+          resolve(data);
+        })
+        .catch((err) => reject(err));
+    });
+  }
+
+  setMute(source, mute) {
+    return new Promise((resolve, reject) => {
+      this.obs
+        .send("SetMute", {
+          source,
+          mute,
+        })
+        .then((data) => {
+          console.log(
+            `${this.config.name} | ${source} has been ${mute ? "" : "un"}muted`
+          );
           resolve(data);
         })
         .catch((err) => reject(err));

@@ -34,6 +34,7 @@ let state = {
   },
   availableInputs: [],
   playerNames: [],
+  muteStates: [],
 };
 
 let currentScene = "Multiview A";
@@ -167,6 +168,7 @@ const init = async () => {
       `2A: ${process.env.PLAYER3}`,
       `2B: ${process.env.PLAYER4}`,
     ];
+    state.muteStates = [...state.muteStates, true, true, true, true];
   }
 
   if (state["OBS2"].connected) {
@@ -184,6 +186,7 @@ const init = async () => {
       `4A: ${process.env.PLAYER7}`,
       `4B: ${process.env.PLAYER8}`,
     ];
+    state.muteStates = [...state.muteStates, true, true, true, true];
   }
 
   if (state["OBS3"].connected) {
@@ -201,7 +204,29 @@ const init = async () => {
       `6A: ${process.env.PLAYER11}`,
       `6B: ${process.env.PLAYER12}`,
     ];
+    state.muteStates = [...state.muteStates, true, true, true, true];
   }
+
+  state.availableInputs.forEach(async (input) => {
+    try {
+      const obs = findOBS(input);
+
+      switch (obs) {
+        case "OBS1":
+          await obs1.setMute(`${input} Input`, true);
+          break;
+        case "OBS2":
+          await obs2.setMute(`${input} Input`, true);
+          break;
+        case "OBS3":
+          await obs3.setMute(`${input} Input`, true);
+          break;
+        default:
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  });
 
   try {
     setInitialSceneItemValues(obs1, obs2, obs3, vmix);
@@ -328,6 +353,35 @@ const init = async () => {
 
         currentScene = scene;
         io.emit("currentScene", currentScene);
+      }
+    });
+
+    socket.on("handleMuteToggle", async (scene) => {
+      try {
+        const idx = state.availableInputs.findIndex((input) => input === scene);
+
+        const newState = !state.muteStates[idx];
+
+        state.muteStates[idx] = newState;
+
+        const obs = findOBS(scene);
+
+        switch (obs) {
+          case "OBS1":
+            await obs1.setMute(`${scene} Input`, newState);
+            break;
+          case "OBS2":
+            await obs2.setMute(`${scene} Input`, newState);
+            break;
+          case "OBS3":
+            await obs3.setMute(`${scene} Input`, newState);
+            break;
+          default:
+        }
+
+        io.emit("muteStates", state.muteStates);
+      } catch (err) {
+        console.log(err);
       }
     });
   });
