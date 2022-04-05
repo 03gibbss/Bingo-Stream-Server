@@ -403,8 +403,6 @@ const init = async () => {
       try {
         const idx = state.availableInputs.findIndex((input) => input === scene);
 
-        console.log("breaks here", scene, type);
-
         const newState = !state[`${type}Visibility`][idx];
 
         state[`${type}Visibility`][idx] = newState;
