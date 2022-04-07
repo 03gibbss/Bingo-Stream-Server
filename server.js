@@ -2,7 +2,6 @@ require("dotenv").config();
 
 const colors = require("colors");
 const EventEmitter = require("events");
-const { response } = require("express");
 const { createServer } = require("http");
 const { Server } = require("socket.io");
 
